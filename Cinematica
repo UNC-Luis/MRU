@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cinemática 1D - Simulador Interactivo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 10px;
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.9rem;
+        }
+
+        .tabs {
+            display: flex;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 5px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px 8px;
+            text-align: center;
+            color: white;
+            background: transparent;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            min-width: 100px;
+        }
+
+        .tab.active {
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .content {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .simulator-section {
+            margin-bottom: 25px;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+
+        .control-group input, .control-group select {
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            transition: border-color 0.3s ease;
+            background: #f7fafc;
+        }
+
+        .control-group input:focus, .control-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+        }
+
+        .simulation-area {
+            background: linear-gradient(to bottom, #87ceeb 0%, #98fb98 100%);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+            min-height: 300px;
+        }
+
+        .object {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #ff4757;
+            border-radius: 50%;
+            transition: all 0.1s linear;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+        }
+
+        .vector {
+            position: absolute;
+            transform-origin: left center;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .vector-line {
+            height: 3px;
+            background: #2ed573;
+            border-radius: 2px;
+            position: relative;
+        }
+
+        .vector-arrow {
+            position: absolute;
+            right: -8px;
+            top: -4px;
+            width: 0;
+            height: 0;
+            border-left: 10px solid #2ed573;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+        }
+
+        .vector-label {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 5px;
+            font-size: 0.7rem;
+            white-space: nowrap;
+        }
+
+        .ground {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 30px;
+            background: linear-gradient(to bottom, #8b4513, #654321);
+            border-radius: 0 0 15px 15px;
+        }
+
+        .problem-section {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .problem-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .problem-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .generate-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: transform 0.2s ease;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .problem-text {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .answer-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+
+        .answer-input input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 0.9rem;
+        }
+
+        .check-btn {
+            background: #10ac84;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .solution {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            display: none;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .solution.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .step {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .step-number {
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .equation {
+            background: #f7fafc;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            margin: 8px 0;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+
+        .result {
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        .result.correct {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .result.incorrect {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .info-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .equation-display {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            font-size: 1rem;
+            margin: 10px 0;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .data-display {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .data-row:last-child {
+            border-bottom: none;
+        }
+
+        .data-label {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .data-value {
+            font-family: 'Courier New', monospace;
+            color: #007bff;
+            font-weight: 600;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 5px;
+            }
+            
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .controls {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .content {
+                padding: 15px;
+            }
+            
+            .tab {
+                font-size: 0.8rem;
+                padding: 10px 6px;
+                min-width: 90px;
+            }
+        }
+
+        .play-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+
+        .play-btn {
+            background: #10ac84;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+
+        .play-btn:hover {
+            background: #0c9977;
+            transform: translateY(-1px);
+        }
+
+        .play-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Cinemática 1D Interactiva</h1>
+            <p>Aprende física con simulaciones realistas y problemas infinitos</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="simulator">Simulador</button>
+            <button class="tab" data-tab="problems">Problemas</button>
+            <button class="tab" data-tab="theory">Teoría</button>
+            <button class="tab" data-tab="freefall">Caída Libre</button>
+        </div>
+
+        <!-- Simulador -->
+        <div id="simulator" class="content">
+            <div class="simulator-section">
+                <h2>🎮 Simulador de Movimiento</h2>
+                <div class="controls">
+                    <div class="control-group">
+                        <label for="v0">Velocidad Inicial (m/s):</label>
+                        <input type="number" id="v0" value="10" min="-50" max="50" step="0.1">
+                    </div>
+                    <div class="control-group">
+                        <label for="acceleration">Aceleración (m/s²):</label>
+                        <input type="number" id="acceleration" value="0" min="-20" max="20" step="0.1">
+                    </div>
+                    <div class="control-group">
+                        <label for="x0">Posición Inicial (m):</label>
+                        <input type="number" id="x0" value="0" min="-100" max="100" step="1">
+                    </div>
+                    <div class="control-group">
+                        <label for="motion-type">Tipo de Movimiento:</label>
+                        <select id="motion-type">
+                            <option value="uniform">MRU (Uniforme)</option>
+                            <option value="accelerated">MRUV (Uniformemente Acelerado)</option>
+                            <option value="freefall">Caída Libre</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="play-controls">
+                    <button class="play-btn" id="play-btn">▶️ Iniciar</button>
+                    <button class="play-btn" id="pause-btn" disabled>⏸️ Pausar</button>
+                    <button class="play-btn" id="reset-btn">🔄 Reiniciar</button>
+                    <button class="play-btn" id="show-vectors">👁️ Vectores</button>
+                </div>
+
+                <div class="simulation-area" id="simulation-area">
+                    <div class="object" id="object"></div>
+                    <div class="ground"></div>
+                </div>
+
+                <div class="data-display">
+                    <div class="data-row">
+                        <span class="data-label">Tiempo (t):</span>
+                        <span class="data-value" id="time-display">0.00 s</span>
+                    </div>
+                    <div class="data-row">
+                        <span class="data-label">Posición (x):</span>
+                        <span class="data-value" id="position-display">0.00 m</span>
+                    </div>
+                    <div class="data-row">
+                        <span class="data-label">Velocidad (v):</span>
+                        <span class="data-value" id="velocity-display">0.00 m/s</span>
+                    </div>
+                    <div class="data-row">
+                        <span class="data-label">Aceleración (a):</span>
+                        <span class="data-value" id="acceleration-display">0.00 m/s²</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Problemas -->
+        <div id="problems" class="content hidden">
+            <div class="problem-section">
+                <div class="problem-header">
+                    <h2 class="problem-title">🧮 Generador de Problemas</h2>
+                    <button class="generate-btn" id="generate-problem">Nuevo Problema</button>
+                </div>
+                
+                <div class="problem-text" id="problem-text">
+                    Haz clic en "Nuevo Problema" para generar un ejercicio de cinemática.
+                </div>
+
+                <div class="answer-input">
+                    <input type="number" id="answer-input" placeholder="Ingresa tu respuesta" step="0.01">
+                    <button class="check-btn" id="check-answer">Verificar</button>
+                </div>
+
+                <div class="result" id="result"></div>
+
+                <div class="solution" id="solution">
+                    <h3>📚 Solución Paso a Paso:</h3>
+                    <div id="solution-content"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Teoría -->
+        <div id="theory" class="content hidden">
+            <div class="info-section">
+                <h2>📖 Fundamentos de Cinemática 1D</h2>
+                
+                <h3>🔍 Conceptos Básicos</h3>
+                <p><strong>Posición (x):</strong> Ubicación de un objeto en el espacio respecto a un punto de referencia.</p>
+                <p><strong>Velocidad (v):</strong> Cambio de posición con respecto al tiempo.</p>
+                <p><strong>Aceleración (a):</strong> Cambio de velocidad con respecto al tiempo.</p>
+
+                <h3>📐 Ecuaciones Cinemáticas</h3>
+                <div class="equation-display">v = v₀ + at</div>
+                <p>Velocidad final en función del tiempo</p>
+
+                <div class="equation-display">x = x₀ + v₀t + ½at²</div>
+                <p>Posición en función del tiempo</p>
+
+                <div class="equation-display">v² = v₀² + 2a(x - x₀)</div>
+                <p>Velocidad final sin tiempo explícito</p>
+
+                <div class="equation-display">x = x₀ + ½(v₀ + v)t</div>
+                <p>Posición con velocidad promedio</p>
+
+                <h3>🎯 Tipos de Movimiento</h3>
+                <p><strong>MRU:</strong> Movimiento Rectilíneo Uniforme (a = 0)</p>
+                <p><strong>MRUV:</strong> Movimiento Rectilíneo Uniformemente Variado (a ≠ 0)</p>
+                <p><strong>Caída Libre:</strong> Caso especial de MRUV donde a = -g = -9.8 m/s²</p>
+            </div>
+        </div>
+
+        <!-- Caída Libre -->
+        <div id="freefall" class="content hidden">
+            <div class="simulator-section">
+                <h2>🍎 Simulador de Caída Libre</h2>
+                <div class="controls">
+                    <div class="control-group">
+                        <label for="height">Altura Inicial (m):</label>
+                        <input type="number" id="height" value="50" min="1" max="200" step="1">
+                    </div>
+                    <div class="control-group">
+                        <label for="initial-v">Velocidad Inicial (m/s):</label>
+                        <input type="number" id="initial-v" value="0" min="-30" max="30" step="0.1">
+                    </div>
+                    <div class="control-group">
+                        <label for="gravity">Gravedad (m/s²):</label>
+                        <input type="number" id="gravity" value="9.8" min="1" max="20" step="0.1">
+                    </div>
+                    <div class="control-group">
+                        <label for="mass">Masa del Objeto (kg):</label>
+                        <input type="number" id="mass" value="1" min="0.1" max="10" step="0.1">
+                    </div>
+                </div>
+
+                <div class="play-controls">
+                    <button class="play-btn" id="freefall-play">▶️ Iniciar</button>
+                    <button class="play-btn" id="freefall-pause" disabled>⏸️ Pausar</button>
+                    <button class="play-btn" id="freefall-reset">🔄 Reiniciar</button>
+                </div>
+
+                <div class="simulation-area" id="freefall-area">
+                    <div class="object" id="falling-object"></div>
+                    <div class="ground"></div>
+                </div>
+
+                <div class="data-display">
+                    <div class="data-row">
+                        <span class="data-label">Tiempo (t):</span>
+                        <span class="data-value" id="ff-time">0.00 s</span>
+                    </div>
+                    <div class="data-row">
+                        <span class="data-label">Altura (y):</span>
+                        <span class="data-value" id="ff-height">0.00 m</span>
+                    </div>
+                    <div class="data-row">
+                        <span class="data-label">Velocidad (v):</span>
+                        <span class="data-value" id="ff-velocity">0.00 m/s</span>
+                    </div>
+                    <div class="data-row">
+                        <span class="data-label">Energía Cinética:</span>
+                        <span class="data-value" id="ff-kinetic">0.00 J</span>
+                    </div>
+                    <div class="data-row">
+                        <span class="data-label">Energía Potencial:</span>
+                        <span class="data-value" id="ff-potential">0.00 J</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class KinematicsApp {
+            constructor() {
+                this.isPlaying = false;
+                this.animationId = null;
+                this.startTime = 0;
+                this.currentTime = 0;
+                this.showVectors = false;
+                this.currentProblem = null;
+                
+                this.initEventListeners();
+                this.initTabs();
+                this.generateProblem();
+            }
+
+            initEventListeners() {
+                // Simulador principal
+                document.getElementById('play-btn').addEventListener('click', () => this.startSimulation());
+                document.getElementById('pause-btn').addEventListener('click', () => this.pauseSimulation());
+                document.getElementById('reset-btn').addEventListener('click', () => this.resetSimulation());
+                document.getElementById('show-vectors').addEventListener('click', () => this.toggleVectors());
+
+                // Caída libre
+                document.getElementById('freefall-play').addEventListener('click', () => this.startFreefall());
+                document.getElementById('freefall-pause').addEventListener('click', () => this.pauseFreefall());
+                document.getElementById('freefall-reset').addEventListener('click', () => this.resetFreefall());
+
+                // Problemas
+                document.getElementById('generate-problem').addEventListener('click', () => this.generateProblem());
+                document.getElementById('check-answer').addEventListener('click', () => this.checkAnswer());
+
+                // Actualizar simulación cuando cambian los parámetros
+                ['v0', 'acceleration', 'x0', 'motion-type'].forEach(id => {
+                    document.getElementById(id).addEventListener('change', () => this.resetSimulation());
+                });
+
+                ['height', 'initial-v', 'gravity', 'mass'].forEach(id => {
+                    document.getElementById(id).addEventListener('change', () => this.resetFreefall());
+                });
+            }
+
+            initTabs() {
+                const tabs = document.querySelectorAll('.tab');
+                const contents = document.querySelectorAll('.content');
+
+                tabs.forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        const targetTab = tab.dataset.tab;
+                        
+                        tabs.forEach(t => t.classList.remove('active'));
+                        contents.forEach(c => c.classList.add('hidden'));
+                        
+                        tab.classList.add('active');
+                        document.getElementById(targetTab).classList.remove('hidden');
+                        
+                        this.pauseSimulation();
+                        this.pauseFreefall();
+                    });
+                });
+            }
+
+            startSimulation() {
+                this.isPlaying = true;
+                this.startTime = performance.now();
+                document.getElementById('play-btn').disabled = true;
+                document.getElementById('pause-btn').disabled = false;
+                this.animate();
+            }
+
+            pauseSimulation() {
+                this.isPlaying = false;
+                if (this.animationId) {
+                    cancelAnimationFrame(this.animationId);
+                }
+                document.getElementById('play-btn').disabled = false;
+                document.getElementById('pause-btn').disabled = true;
+            }
+
+            resetSimulation() {
+                this.pauseSimulation();
+                this.currentTime = 0;
+                this.updateSimulation();
+                document.getElementById('play-btn').disabled = false;
+                document.getElementById('pause-btn').disabled = true;
+            }
+
+            animate() {
+                if (!this.isPlaying) return;
+
+                const now = performance.now();
+                this.currentTime = (now - this.startTime) / 1000; // Convert to seconds
+
+                this.updateSimulation();
+                this.animationId = requestAnimationFrame(() => this.animate());
+            }
+
+            updateSimulation() {
+                const v0 = parseFloat(document.getElementById('v0').value);
+                const a = parseFloat(document.getElementById('acceleration').value);
+                const x0 = parseFloat(document.getElementById('x0').value);
+                const motionType = document.getElementById('motion-type').value;
+
+                let acceleration = a;
+                if (motionType === 'uniform') acceleration = 0;
+                if (motionType === 'freefall') acceleration = -9.8;
+
+                // Calcular posición y velocidad
+                const position = x0 + v0 * this.currentTime + 0.5 * acceleration * this.currentTime * this.currentTime;
+                const velocity = v0 + acceleration * this.currentTime;
+
+                // Actualizar visualización
+                this.updateObjectPosition(position);
+                this.updateDataDisplay(this.currentTime, position, velocity, acceleration);
+
+                // Mostrar vectores si está habilitado
+                if (this.showVectors) {
+                    this.updateVectors(velocity, acceleration);
+                }
+
+                // Detener si el objeto sale de la pantalla o toca el suelo
+                const simArea = document.getElementById('simulation-area');
+                const objElement = document.getElementById('object');
+                const rect = simArea.getBoundingClientRect();
+                const objRect = objElement.getBoundingClientRect();
+
+                if (objRect.bottom >= rect.bottom - 30 || objRect.left < rect.left || objRect.right > rect.right) {
+                    this.pauseSimulation();
+                }
+            }
+
+            updateObjectPosition(position) {
+                const object = document.getElementById('object');
+                const simArea = document.getElementById('simulation-area');
+                const areaWidth = simArea.clientWidth;
+                const centerX = areaWidth / 2;
+                
+                // Escalar posición para visualización (1 metro = 2 píxeles)
+                const pixelPosition = centerX + position * 2;
+                
+                object.style.left = Math.max(0, Math.min(areaWidth - 20, pixelPosition)) + 'px';
+                object.style.top = '50px';
+            }
+
+            updateDataDisplay(time, position, velocity, acceleration) {
+                document.getElementById('time-display').textContent = time.toFixed(2) + ' s';
+                document.getElementById('position-display').textContent = position.toFixed(2) + ' m';
+                document.getElementById('velocity-display').textContent = velocity.toFixed(2) + ' m/s';
+                document.getElementById('acceleration-display').textContent = acceleration.toFixed(2) + ' m/s²';
+            }
+
+            updateVectors(velocity, acceleration) {
+                // Remover vectores existentes
+                document.querySelectorAll('.vector').forEach(v => v.remove());
+
+                const object = document.getElementById('object');
+                const rect = object.getBoundingClientRect();
+                const simRect = document.getElementById('simulation-area').getBoundingClientRect();
+
+                // Vector velocidad (verde)
+                if (Math.abs(velocity) > 0.1) {
+                    const velocityVector = this.createVector(
+                        rect.left - simRect.left + 10,
+                        rect.top - simRect.top + 30,
+                        velocity * 5,
+                        '#2ed573',
+                        `v = ${velocity.toFixed(1)} m/s`
+                    );
+                    document.getElementById('simulation-area').appendChild(velocityVector);
+                }
+
+                // Vector aceleración (azul)
+                if (Math.abs(acceleration) > 0.1) {
+                    const accelVector = this.createVector(
+                        rect.left - simRect.left + 10,
+                        rect.top - simRect.top + 50,
+                        acceleration * 10,
+                        '#3742fa',
+                        `a = ${acceleration.toFixed(1)} m/s²`
+                    );
+                    document.getElementById('simulation-area').appendChild(accelVector);
+                }
+            }
+
+            createVector(x, y, magnitude, color, label) {
+                const vector = document.createElement('div');
+                vector.className = 'vector';
+                vector.style.left = x + 'px';
+                vector.style.top = y + 'px';
+
+                const length = Math.abs(magnitude);
+                const direction = magnitude >= 0 ? 1 : -1;
+
+                vector.innerHTML = `
+                    <div class="vector-line" style="width: ${length}px; background: ${color}; transform: scaleX(${direction});"></div>
+                    <div class="vector-arrow" style="border-left-color: ${color}; transform: translateX(${direction === 1 ? length - 8 : -2}px);"></div>
+                    <div class="vector-label">${label}</div>
+                `;
+
+                return vector;
+            }
+
+            toggleVectors() {
+                this.showVectors = !this.showVectors;
+                const btn = document.getElementById('show-vectors');
+                btn.textContent = this.showVectors ? '🙈 Ocultar Vectores' : '👁️ Mostrar Vectores';
+                
+                if (!this.showVectors) {
+                    document.querySelectorAll('.vector').forEach(v => v.remove());
+                }
+            }
+
+            // Simulación de Caída Libre
+            startFreefall() {
+                this.isFreefallPlaying = true;
+                this.freefallStartTime = performance.now();
+                document.getElementById('freefall-play').disabled = true;
+                document.getElementById('freefall-pause').disabled = false;
+                this.animateFreefall();
+            }
+
+            pauseFreefall() {
+                this.isFreefallPlaying = false;
+                if (this.freefallAnimationId) {
+                    cancelAnimationFrame(this.freefallAnimationId);
+                }
+                document.getElementById('freefall-play').disabled = false;
+                document.getElementById('freefall-pause').disabled = true;
+            }
+
+            resetFreefall() {
+                this.pauseFreefall();
+                this.freefallCurrentTime = 0;
+                this.updateFreefallSimulation();
+                document.getElementById('freefall-play').disabled = false;
+                document.getElementById('freefall-pause').disabled = true;
+            }
+
+            animateFreefall() {
+                if (!this.isFreefallPlaying) return;
+
+                const now = performance.now();
+                this.freefallCurrentTime = (now - this.freefallStartTime) / 1000;
+
+                this.updateFreefallSimulation();
+                this.freefallAnimationId = requestAnimationFrame(() => this.animateFreefall());
+            }
+
+            updateFreefallSimulation() {
+                const h0 = parseFloat(document.getElementById('height').value);
+                const v0 = parseFloat(document.getElementById('initial-v').value);
+                const g = parseFloat(document.getElementById('gravity').value);
+                const mass = parseFloat(document.getElementById('mass').value);
+
+                const t = this.freefallCurrentTime || 0;
+
+                // Ecuaciones de caída libre
+                const height = h0 + v0 * t - 0.5 * g * t * t;
+                const velocity = v0 - g * t;
+                
+                // Energías
+                const kineticEnergy = 0.5 * mass * velocity * velocity;
+                const potentialEnergy = mass * g * Math.max(0, height);
+
+                // Actualizar posición visual
+                this.updateFreefallObjectPosition(height, h0);
+                
+                // Actualizar datos
+                document.getElementById('ff-time').textContent = t.toFixed(2) + ' s';
+                document.getElementById('ff-height').textContent = Math.max(0, height).toFixed(2) + ' m';
+                document.getElementById('ff-velocity').textContent = velocity.toFixed(2) + ' m/s';
+                document.getElementById('ff-kinetic').textContent = kineticEnergy.toFixed(2) + ' J';
+                document.getElementById('ff-potential').textContent = potentialEnergy.toFixed(2) + ' J';
+
+                // Detener cuando toque el suelo
+                if (height <= 0 && this.isFreefallPlaying) {
+                    this.pauseFreefall();
+                }
+            }
+
+            updateFreefallObjectPosition(height, maxHeight) {
+                const object = document.getElementById('falling-object');
+                const simArea = document.getElementById('freefall-area');
+                const areaHeight = simArea.clientHeight - 50; // Espacio para el suelo
+                
+                // Calcular posición vertical (invertida porque Y crece hacia abajo)
+                const relativeHeight = Math.max(0, height) / maxHeight;
+                const pixelPosition = areaHeight * (1 - relativeHeight);
+                
+                object.style.top = pixelPosition + 'px';
+                object.style.left = '50%';
+                object.style.transform = 'translateX(-50%)';
+            }
+
+            // Generador de Problemas
+            generateProblem() {
+                const problemTypes = [
+                    'velocity_time',
+                    'position_time',
+                    'velocity_squared',
+                    'average_velocity',
+                    'freefall_time',
+                    'freefall_height',
+                    'freefall_velocity'
+                ];
+
+                const type = problemTypes[Math.floor(Math.random() * problemTypes.length)];
+                this.currentProblem = this.createProblem(type);
+                
+                document.getElementById('problem-text').innerHTML = this.currentProblem.text;
+                document.getElementById('answer-input').value = '';
+                document.getElementById('result').textContent = '';
+                document.getElementById('solution').classList.remove('show');
+            }
+
+            createProblem(type) {
+                const problems = {
+                    velocity_time: () => {
+                        const v0 = this.randomValue(5, 25);
+                        const a = this.randomValue(-10, 10, 0.1);
+                        const t = this.randomValue(2, 8);
+                        const v = v0 + a * t;
+                        
+                        return {
+                            text: `Un objeto se mueve con velocidad inicial de <strong>${v0} m/s</strong> y aceleración constante de <strong>${a} m/s²</strong>. ¿Cuál será su velocidad después de <strong>${t} s</strong>?`,
+                            answer: v,
+                            unit: 'm/s',
+                            solution: this.createSolution([
+                                'Identificamos los datos conocidos:',
+                                `v₀ = ${v0} m/s (velocidad inicial)`,
+                                `a = ${a} m/s² (aceleración)`,
+                                `t = ${t} s (tiempo)`,
+                                'Aplicamos la ecuación: v = v₀ + at',
+                                `v = ${v0} + (${a})(${t})`,
+                                `v = ${v0} + ${(a * t).toFixed(2)}`,
+                                `v = ${v.toFixed(2)} m/s`
+                            ])
+                        };
+                    },
+
+                    position_time: () => {
+                        const x0 = this.randomValue(0, 20);
+                        const v0 = this.randomValue(5, 20);
+                        const a = this.randomValue(-5, 5, 0.1);
+                        const t = this.randomValue(3, 7);
+                        const x = x0 + v0 * t + 0.5 * a * t * t;
+                        
+                        return {
+                            text: `Un objeto parte de la posición <strong>${x0} m</strong> con velocidad inicial de <strong>${v0} m/s</strong> y aceleración de <strong>${a} m/s²</strong>. ¿En qué posición estará después de <strong>${t} s</strong>?`,
+                            answer: x,
+                            unit: 'm',
+                            solution: this.createSolution([
+                                'Identificamos los datos conocidos:',
+                                `x₀ = ${x0} m (posición inicial)`,
+                                `v₀ = ${v0} m/s (velocidad inicial)`,
+                                `a = ${a} m/s² (aceleración)`,
+                                `t = ${t} s (tiempo)`,
+                                'Aplicamos la ecuación: x = x₀ + v₀t + ½at²',
+                                `x = ${x0} + (${v0})(${t}) + ½(${a})(${t})²`,
+                                `x = ${x0} + ${(v0 * t).toFixed(2)} + ½(${a})(${(t * t).toFixed(2)})`,
+                                `x = ${x0} + ${(v0 * t).toFixed(2)} + ${(0.5 * a * t * t).toFixed(2)}`,
+                                `x = ${x.toFixed(2)} m`
+                            ])
+                        };
+                    },
+
+                    freefall_time: () => {
+                        const h0 = this.randomValue(20, 100);
+                        const v0 = this.randomValue(0, 15);
+                        const g = 9.8;
+                        // Resolver ecuación cuadrática: h0 + v0*t - 0.5*g*t² = 0
+                        const discriminant = v0 * v0 + 2 * g * h0;
+                        const t = (-v0 + Math.sqrt(discriminant)) / g;
+                        
+                        return {
+                            text: `Un objeto se lanza verticalmente hacia arriba desde una altura de <strong>${h0} m</strong> con velocidad inicial de <strong>${v0} m/s</strong>. ¿Cuánto tiempo tarda en tocar el suelo? (g = 9.8 m/s²)`,
+                            answer: t,
+                            unit: 's',
+                            solution: this.createSolution([
+                                'Identificamos los datos conocidos:',
+                                `h₀ = ${h0} m (altura inicial)`,
+                                `v₀ = ${v0} m/s (velocidad inicial hacia arriba)`,
+                                `g = 9.8 m/s² (aceleración de gravedad)`,
+                                'El objeto toca el suelo cuando h = 0',
+                                'Ecuación: h = h₀ + v₀t - ½gt²',
+                                `0 = ${h0} + ${v0}t - ½(9.8)t²`,
+                                `0 = ${h0} + ${v0}t - 4.9t²`,
+                                'Reordenando: 4.9t² - ${v0}t - ${h0} = 0',
+                                'Usando la fórmula cuadrática:',
+                                `t = (${v0} + √(${v0}² + 4(4.9)(${h0}))) / (2 × 4.9)`,
+                                `t = (${v0} + √${discriminant.toFixed(2)}) / 9.8`,
+                                `t = ${t.toFixed(2)} s`
+                            ])
+                        };
+                    },
+
+                    freefall_velocity: () => {
+                        const h0 = this.randomValue(30, 80);
+                        const g = 9.8;
+                        const v = Math.sqrt(2 * g * h0);
+                        
+                        return {
+                            text: `Un objeto se deja caer desde una altura de <strong>${h0} m</strong>. ¿Con qué velocidad impacta el suelo? (g = 9.8 m/s²)`,
+                            answer: v,
+                            unit: 'm/s',
+                            solution: this.createSolution([
+                                'Identificamos los datos conocidos:',
+                                `h₀ = ${h0} m (altura inicial)`,
+                                `v₀ = 0 m/s (se deja caer, sin velocidad inicial)`,
+                                `g = 9.8 m/s² (aceleración de gravedad)`,
+                                'Al impactar el suelo: h = 0',
+                                'Usamos: v² = v₀² + 2g(h₀ - h)',
+                                `v² = 0² + 2(9.8)(${h0} - 0)`,
+                                `v² = 2 × 9.8 × ${h0}`,
+                                `v² = ${(2 * g * h0).toFixed(2)}`,
+                                `v = √${(2 * g * h0).toFixed(2)}`,
+                                `v = ${v.toFixed(2)} m/s`
+                            ])
+                        };
+                    }
+                };
+
+                return problems[type]();
+            }
+
+            createSolution(steps) {
+                return steps.map((step, index) => {
+                    if (step.includes('=') && !step.includes(':')) {
+                        return `<div class="equation">${step}</div>`;
+                    }
+                    return `<div class="step">
+                        <div class="step-number">Paso ${index + 1}:</div>
+                        ${step}
+                    </div>`;
+                }).join('');
+            }
+
+            randomValue(min, max, step = 1) {
+                const range = (max - min) / step;
+                return (Math.floor(Math.random() * range) * step + min);
+            }
+
+            checkAnswer() {
+                const userAnswer = parseFloat(document.getElementById('answer-input').value);
+                const correctAnswer = this.currentProblem.answer;
+                const tolerance = Math.abs(correctAnswer) * 0.05 + 0.01; // 5% de tolerancia
+
+                const resultDiv = document.getElementById('result');
+                const solutionDiv = document.getElementById('solution');
+                const solutionContent = document.getElementById('solution-content');
+
+                if (Math.abs(userAnswer - correctAnswer) <= tolerance) {
+                    resultDiv.className = 'result correct';
+                    resultDiv.textContent = `¡Correcto! 🎉 La respuesta es ${correctAnswer.toFixed(2)} ${this.currentProblem.unit}`;
+                } else {
+                    resultDiv.className = 'result incorrect';
+                    resultDiv.textContent = `❌ Incorrecto. Tu respuesta: ${userAnswer} ${this.currentProblem.unit}. Respuesta correcta: ${correctAnswer.toFixed(2)} ${this.currentProblem.unit}`;
+                }
+
+                // Mostrar solución
+                solutionContent.innerHTML = this.currentProblem.solution;
+                solutionDiv.classList.add('show');
+            }
+        }
+
+        // Inicializar la aplicación cuando se carga la página
+        document.addEventListener('DOMContentLoaded', () => {
+            new KinematicsApp();
+        });
+    </script>
+</body>
+</html>
